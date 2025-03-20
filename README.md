@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🎮 AI Games
+==========
 
-## Getting Started
+Uma coleção de jogos clássicos recriados com uma interface moderna usando Next.js e shadcn/ui.
 
-First, run the development server:
+![Versão](https://img.shields.io/badge/versão-0.1.0-blue.svg)
+![Licença](https://img.shields.io/badge/licença-MIT-green.svg)
 
+## 🎯 Sobre o Projeto
+
+AI Games é uma plataforma web que reúne jogos clássicos recriados com uma interface moderna e responsiva. O projeto foi desenvolvido com foco em:
+
+- Design moderno e intuitivo
+- Interface responsiva para desktop e mobile
+- Temas claro e escuro
+- Experiência de usuário fluida
+- Código limpo e bem estruturado
+
+## 🎲 Jogos Disponíveis
+
+### Jogo da Velha
+O clássico jogo da velha com uma interface moderna. Jogue contra um amigo localmente!
+
+### Jogo da Memória
+Teste sua memória encontrando os pares de cartas. Tente completar com o menor número de movimentos!
+
+### Snake Game
+O famoso jogo da cobrinha em uma versão moderna. Controles WASD e suporte para dispositivos móveis.
+
+## 🚀 Tecnologias
+
+- [Next.js 15](https://nextjs.org/) - Framework React
+- [TypeScript](https://www.typescriptlang.org/) - Tipagem estática
+- [Tailwind CSS](https://tailwindcss.com/) - Framework CSS
+- [shadcn/ui](https://ui.shadcn.com/) - Componentes de UI
+- [Lucide Icons](https://lucide.dev/) - Ícones
+- [next-themes](https://github.com/pacocoursey/next-themes) - Temas claro/escuro
+
+## 💻 Como Executar
+
+1. Clone o repositório
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/seu-usuario/ai-games.git
+cd ai-games
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Instale as dependências
+```bash
+npm install
+# ou
+yarn install
+# ou
+pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Inicie o servidor de desenvolvimento
+```bash
+npm run dev
+# ou
+yarn dev
+# ou
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Abra [http://localhost:3000](http://localhost:3000) no seu navegador
 
-## Learn More
+## 📁 Estrutura do Projeto
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                    # Rotas e layouts
+│   ├── games/             # Páginas dos jogos
+│   └── page.tsx           # Página inicial
+├── components/            # Componentes React
+│   ├── games/            # Componentes dos jogos
+│   ├── ui/               # Componentes de UI
+│   └── site-header.tsx   # Cabeçalho do site
+└── lib/                  # Utilitários e configurações
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🤝 Contribuindo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Contribuições são sempre bem-vindas! Por favor, leia o [guia de contribuição](CONTRIBUTING.md) primeiro.
 
-## Deploy on Vercel
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📝 Licença
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+Feito com ❤️ por [Seu Nome](https://github.com/seu-usuario)
