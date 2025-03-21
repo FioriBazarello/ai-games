@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 
 // Tipos
-type TetrisBlock = 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L' | null
+type TetrisBlockType = 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L'
+type TetrisBlock = TetrisBlockType | null
 type TetrisGrid = TetrisBlock[][]
 type TetrisPiece = {
     shape: TetrisBlock[][]
@@ -21,29 +22,43 @@ interface GameState {
 }
 
 // Peças do Tetris
-const TETRIS_PIECES = {
-    I: [[null, null, null, null],
-    ['I', 'I', 'I', 'I'],
-    [null, null, null, null],
-    [null, null, null, null]],
-    O: [['O', 'O'],
-    ['O', 'O']],
-    T: [[null, 'T', null],
-    ['T', 'T', 'T'],
-    [null, null, null]],
-    S: [[null, 'S', 'S'],
-    ['S', 'S', null],
-    [null, null, null]],
-    Z: [['Z', 'Z', null],
-    [null, 'Z', 'Z'],
-    [null, null, null]],
-    J: [['J', null, null],
-    ['J', 'J', 'J'],
-    [null, null, null]],
-    L: [[null, null, 'L'],
-    ['L', 'L', 'L'],
-    [null, null, null]]
-}
+const TETRIS_PIECES: Record<TetrisBlockType, TetrisBlock[][]> = {
+    I: [
+        [null, null, null, null],
+        ['I', 'I', 'I', 'I'],
+        [null, null, null, null],
+        [null, null, null, null]
+    ],
+    O: [
+        ['O', 'O'],
+        ['O', 'O']
+    ],
+    T: [
+        [null, 'T', null],
+        ['T', 'T', 'T'],
+        [null, null, null]
+    ],
+    S: [
+        [null, 'S', 'S'],
+        ['S', 'S', null],
+        [null, null, null]
+    ],
+    Z: [
+        ['Z', 'Z', null],
+        [null, 'Z', 'Z'],
+        [null, null, null]
+    ],
+    J: [
+        ['J', null, null],
+        ['J', 'J', 'J'],
+        [null, null, null]
+    ],
+    L: [
+        [null, null, 'L'],
+        ['L', 'L', 'L'],
+        [null, null, null]
+    ]
+} as const
 
 const GRID_WIDTH = 10
 const GRID_HEIGHT = 20
@@ -59,18 +74,18 @@ export function GameBoard() {
     })
 
     // Criar nova peça
-    const createNewPiece = useCallback(() => {
-        const pieces = Object.keys(TETRIS_PIECES) as (keyof typeof TETRIS_PIECES)[]
+    const createNewPiece = useCallback((): TetrisPiece => {
+        const pieces = Object.keys(TETRIS_PIECES) as TetrisBlockType[]
         const randomPiece = pieces[Math.floor(Math.random() * pieces.length)]
         return {
-            shape: TETRIS_PIECES[randomPiece],
+            shape: [...TETRIS_PIECES[randomPiece]],
             x: Math.floor(GRID_WIDTH / 2) - Math.floor(TETRIS_PIECES[randomPiece][0].length / 2),
             y: 0
         }
     }, [])
 
     // Verificar colisão
-    const checkCollision = useCallback((piece: TetrisPiece, grid: TetrisGrid) => {
+    const checkCollision = useCallback((piece: TetrisPiece, grid: TetrisGrid): boolean => {
         for (let y = 0; y < piece.shape.length; y++) {
             for (let x = 0; x < piece.shape[y].length; x++) {
                 if (piece.shape[y][x]) {
@@ -92,7 +107,7 @@ export function GameBoard() {
     const movePiece = useCallback((dx: number, dy: number) => {
         if (gameState.gameOver || gameState.isPaused || !gameState.currentPiece) return
 
-        const newPiece = {
+        const newPiece: TetrisPiece = {
             ...gameState.currentPiece,
             x: gameState.currentPiece.x + dx,
             y: gameState.currentPiece.y + dy
@@ -152,7 +167,7 @@ export function GameBoard() {
             piece.shape.map(row => row[row.length - 1 - i])
         ) as TetrisBlock[][]
 
-        const newPiece = {
+        const newPiece: TetrisPiece = {
             ...piece,
             shape: newShape
         }
@@ -185,8 +200,13 @@ export function GameBoard() {
                     break
                 case ' ':
                     // Queda instantânea
-                    while (!checkCollision({ ...gameState.currentPiece!, y: gameState.currentPiece!.y + 1 }, gameState.grid)) {
-                        movePiece(0, 1)
+                    if (gameState.currentPiece) {
+                        while (!checkCollision({
+                            ...gameState.currentPiece,
+                            y: gameState.currentPiece.y + 1
+                        }, gameState.grid)) {
+                            movePiece(0, 1)
+                        }
                     }
                     break
                 case 'p':
@@ -240,8 +260,7 @@ export function GameBoard() {
                 {displayGrid.flat().map((cell, i) => (
                     <div
                         key={i}
-                        className={`w-6 h-6 rounded-sm ${cell ? 'bg-blue-500' : 'bg-gray-900'
-                            }`}
+                        className={`w-6 h-6 rounded-sm ${cell ? 'bg-blue-500' : 'bg-gray-900'}`}
                     />
                 ))}
             </div>
