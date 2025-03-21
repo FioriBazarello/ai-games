@@ -269,16 +269,12 @@ export function GameBoard() {
     }, [gameState.aliens, gameState.projectiles, gameState.ship.y]);
 
     useEffect(() => {
-        if (!canvasRef.current) return;
-
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        if (!canvasRef.current || !gameState.gameStarted || gameState.gameOver) return;
 
         const gameLoop = () => {
-            if (!gameState.gameOver && gameState.gameStarted) {
+            setGameState(prev => {
                 // Atualizar posição dos projéteis
-                const updatedProjectiles = gameState.projectiles
+                const updatedProjectiles = prev.projectiles
                     .map(projectile => ({
                         ...projectile,
                         y: projectile.y - PROJECTILE_SPEED
@@ -286,50 +282,100 @@ export function GameBoard() {
                     .filter(projectile => projectile.y > 0);
 
                 // Atualizar posição dos aliens
-                const updatedAliens = gameState.aliens.map(alien => {
+                let shouldChangeDirection = false;
+                let shouldMoveDown = false;
+
+                // Verificar se algum alien atingiu as bordas
+                prev.aliens.forEach(alien => {
+                    if (alien.alive) {
+                        const nextX = alien.direction === "right"
+                            ? alien.x + prev.alienSpeed
+                            : alien.x - prev.alienSpeed;
+
+                        if (nextX <= 0 || nextX >= CANVAS_WIDTH - ALIEN_SIZE) {
+                            shouldChangeDirection = true;
+                            shouldMoveDown = true;
+                        }
+                    }
+                });
+
+                // Atualizar aliens
+                const updatedAliens = prev.aliens.map(alien => {
                     if (!alien.alive) return alien;
 
                     let newX = alien.x;
-                    const newDirection: "right" | "left" = alien.direction === "right" ? "right" : "left";
+                    let newY = alien.y;
+                    const newDirection = shouldChangeDirection
+                        ? (alien.direction === "right" ? "left" : "right")
+                        : alien.direction;
 
-                    if (newDirection === "right") {
-                        newX += gameState.alienSpeed;
-                    } else {
-                        newX -= gameState.alienSpeed;
+                    if (!shouldChangeDirection) {
+                        newX = newDirection === "right"
+                            ? alien.x + prev.alienSpeed
+                            : alien.x - prev.alienSpeed;
                     }
 
-                    // Verificar colisão com as bordas
-                    if (newX <= 0 || newX >= CANVAS_WIDTH - alien.width) {
-                        return {
-                            ...alien,
-                            y: alien.y + 30,
-                            direction: newDirection === "right" ? "left" : "right"
-                        };
+                    if (shouldMoveDown) {
+                        newY = alien.y + 30;
                     }
 
                     return {
                         ...alien,
                         x: newX,
+                        y: newY,
                         direction: newDirection
                     };
                 });
 
-                setGameState(prev => ({
-                    ...prev,
-                    projectiles: updatedProjectiles,
-                    aliens: updatedAliens as Alien[]
-                }));
-
                 // Verificar colisões
-                checkCollisions();
+                const aliensAfterCollisions = [...updatedAliens];
+                const projectilesAfterCollisions = updatedProjectiles.filter(projectile => {
+                    let hitAlien = false;
+                    aliensAfterCollisions.forEach(alien => {
+                        if (alien.alive &&
+                            projectile.x > alien.x &&
+                            projectile.x < alien.x + alien.width &&
+                            projectile.y > alien.y &&
+                            projectile.y < alien.y + alien.height) {
+                            alien.alive = false;
+                            hitAlien = true;
+                        }
+                    });
+                    return !hitAlien;
+                });
+
+                // Verificar game over
+                const gameOver = aliensAfterCollisions.some(alien =>
+                    alien.alive && alien.y + alien.height >= prev.ship.y);
+
                 // Verificar se o nível foi completado
-                checkLevelComplete();
-            }
+                const allAliensDestroyed = aliensAfterCollisions.every(alien => !alien.alive);
+                if (allAliensDestroyed) {
+                    const newLevel = prev.level + 1;
+                    const newAlienSpeed = Math.min(prev.alienSpeed + 0.5, 8);
+                    return {
+                        ...prev,
+                        level: newLevel,
+                        alienSpeed: newAlienSpeed,
+                        aliens: initializeAliens(newLevel),
+                        projectiles: [],
+                        score: prev.score
+                    };
+                }
+
+                return {
+                    ...prev,
+                    aliens: aliensAfterCollisions,
+                    projectiles: projectilesAfterCollisions,
+                    score: (prev.aliens.filter(a => !a.alive).length) * 100,
+                    gameOver
+                };
+            });
         };
 
         const gameInterval = setInterval(gameLoop, 1000 / 60);
         return () => clearInterval(gameInterval);
-    }, [gameState, checkCollisions, checkLevelComplete]);
+    }, [gameState.gameStarted, gameState.gameOver, initializeAliens]);
 
     // Loop de renderização usando requestAnimationFrame
     useEffect(() => {
