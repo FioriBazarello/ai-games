@@ -25,7 +25,8 @@ const SPEED_INCREASE = 1.1
 
 export function GameBoard() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const [gameState, setGameState] = useState<GameState>({
+    const containerRef = useRef<HTMLDivElement>(null)
+    const gameStateRef = useRef<GameState>({
         playerY: GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2,
         computerY: GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2,
         ballX: GAME_WIDTH / 2,
@@ -36,6 +37,7 @@ export function GameBoard() {
         computerScore: 0,
         isGameOver: false
     })
+    const [, forceUpdate] = useState({})
 
     const resetBall = () => {
         return {
@@ -47,68 +49,104 @@ export function GameBoard() {
     }
 
     const handleKeyPress = (e: KeyboardEvent) => {
-        if (gameState.isGameOver) return
+        if (gameStateRef.current.isGameOver) return
 
         const moveAmount = 20
-        setGameState(prev => ({
-            ...prev,
-            playerY: Math.max(0, Math.min(GAME_HEIGHT - PADDLE_HEIGHT,
-                e.key === "ArrowUp" || e.key === "w" || e.key === "W"
-                    ? prev.playerY - moveAmount
-                    : e.key === "ArrowDown" || e.key === "s" || e.key === "S"
-                        ? prev.playerY + moveAmount
-                        : prev.playerY
-            ))
-        }))
+        const newPlayerY = Math.max(0, Math.min(GAME_HEIGHT - PADDLE_HEIGHT,
+            e.key === "ArrowUp" || e.key === "w" || e.key === "W"
+                ? gameStateRef.current.playerY - moveAmount
+                : e.key === "ArrowDown" || e.key === "s" || e.key === "S"
+                    ? gameStateRef.current.playerY + moveAmount
+                    : gameStateRef.current.playerY
+        ))
+
+        gameStateRef.current = {
+            ...gameStateRef.current,
+            playerY: newPlayerY
+        }
+        forceUpdate({})
     }
 
     useEffect(() => {
         window.addEventListener("keydown", handleKeyPress)
         return () => window.removeEventListener("keydown", handleKeyPress)
-    }, [gameState.isGameOver])
+    }, [])
 
     useEffect(() => {
         const canvas = canvasRef.current
-        if (!canvas) return
+        const container = containerRef.current
+        if (!canvas || !container) return
 
         const context = canvas.getContext("2d")
         if (!context) return
 
+        const resizeCanvas = () => {
+            const containerWidth = container.clientWidth
+            const scale = containerWidth / GAME_WIDTH
+            const scaledHeight = GAME_HEIGHT * scale
+
+            canvas.style.width = `${containerWidth}px`
+            canvas.style.height = `${scaledHeight}px`
+            canvas.width = GAME_WIDTH
+            canvas.height = GAME_HEIGHT
+        }
+
+        const render = () => {
+            context.fillStyle = "#000"
+            context.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+            context.fillStyle = "#fff"
+            context.fillRect(0, gameStateRef.current.playerY, PADDLE_WIDTH, PADDLE_HEIGHT)
+            context.fillRect(GAME_WIDTH - PADDLE_WIDTH, gameStateRef.current.computerY, PADDLE_WIDTH, PADDLE_HEIGHT)
+            context.fillRect(gameStateRef.current.ballX, gameStateRef.current.ballY, BALL_SIZE, BALL_SIZE)
+
+            context.setLineDash([5, 15])
+            context.beginPath()
+            context.moveTo(GAME_WIDTH / 2, 0)
+            context.lineTo(GAME_WIDTH / 2, GAME_HEIGHT)
+            context.strokeStyle = "#fff"
+            context.stroke()
+
+            context.font = "32px Arial"
+            context.fillText(gameStateRef.current.playerScore.toString(), GAME_WIDTH / 4, 50)
+            context.fillText(gameStateRef.current.computerScore.toString(), 3 * GAME_WIDTH / 4, 50)
+        }
+
+        resizeCanvas()
+        window.addEventListener("resize", resizeCanvas)
+
         const gameLoop = setInterval(() => {
-            if (gameState.isGameOver) return
+            if (gameStateRef.current.isGameOver) return
 
-            // Atualiza posição da bola
-            let newBallX = gameState.ballX + gameState.ballSpeedX
-            let newBallY = gameState.ballY + gameState.ballSpeedY
-            let newBallSpeedX = gameState.ballSpeedX
-            let newBallSpeedY = gameState.ballSpeedY
-            let newPlayerScore = gameState.playerScore
-            let newComputerScore = gameState.computerScore
-            let gameOver: boolean = gameState.isGameOver
+            const state = gameStateRef.current
+            let newBallX = state.ballX + state.ballSpeedX
+            let newBallY = state.ballY + state.ballSpeedY
+            let newBallSpeedX = state.ballSpeedX
+            let newBallSpeedY = state.ballSpeedY
+            let newPlayerScore = state.playerScore
+            let newComputerScore = state.computerScore
+            let gameOver = state.isGameOver
 
-            // Colisão com as paredes superior e inferior
             if (newBallY <= 0 || newBallY >= GAME_HEIGHT - BALL_SIZE) {
                 newBallSpeedY *= -1
             }
 
-            // Colisão com as raquetes
             if (newBallX <= PADDLE_WIDTH &&
-                newBallY >= gameState.playerY &&
-                newBallY <= gameState.playerY + PADDLE_HEIGHT) {
+                newBallY >= state.playerY &&
+                newBallY <= state.playerY + PADDLE_HEIGHT) {
                 newBallX = PADDLE_WIDTH
                 newBallSpeedX *= -SPEED_INCREASE
                 newBallSpeedY *= SPEED_INCREASE
             }
 
             if (newBallX >= GAME_WIDTH - PADDLE_WIDTH - BALL_SIZE &&
-                newBallY >= gameState.computerY &&
-                newBallY <= gameState.computerY + PADDLE_HEIGHT) {
+                newBallY >= state.computerY &&
+                newBallY <= state.computerY + PADDLE_HEIGHT) {
                 newBallX = GAME_WIDTH - PADDLE_WIDTH - BALL_SIZE
                 newBallSpeedX *= -SPEED_INCREASE
                 newBallSpeedY *= SPEED_INCREASE
             }
 
-            // Pontuação
             if (newBallX < 0) {
                 newComputerScore++
                 if (newComputerScore >= 5) {
@@ -129,20 +167,19 @@ export function GameBoard() {
                 newBallSpeedY = resetState.ballSpeedY
             }
 
-            // IA do computador
             const computerSpeed = 5
-            const computerCenter = gameState.computerY + PADDLE_HEIGHT / 2
+            const computerCenter = state.computerY + PADDLE_HEIGHT / 2
             const ballCenter = newBallY + BALL_SIZE / 2
 
-            let newComputerY = gameState.computerY
+            let newComputerY = state.computerY
             if (computerCenter < ballCenter - 10) {
-                newComputerY = Math.min(gameState.computerY + computerSpeed, GAME_HEIGHT - PADDLE_HEIGHT)
+                newComputerY = Math.min(state.computerY + computerSpeed, GAME_HEIGHT - PADDLE_HEIGHT)
             } else if (computerCenter > ballCenter + 10) {
-                newComputerY = Math.max(gameState.computerY - computerSpeed, 0)
+                newComputerY = Math.max(state.computerY - computerSpeed, 0)
             }
 
-            setGameState(prev => ({
-                ...prev,
+            gameStateRef.current = {
+                ...state,
                 ballX: newBallX,
                 ballY: newBallY,
                 ballSpeedX: newBallSpeedX,
@@ -151,43 +188,23 @@ export function GameBoard() {
                 playerScore: newPlayerScore,
                 computerScore: newComputerScore,
                 isGameOver: gameOver
-            }))
+            }
 
-            // Renderização
-            context.fillStyle = "#000"
-            context.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
-
-            // Raquete do jogador
-            context.fillStyle = "#fff"
-            context.fillRect(0, gameState.playerY, PADDLE_WIDTH, PADDLE_HEIGHT)
-
-            // Raquete do computador
-            context.fillRect(GAME_WIDTH - PADDLE_WIDTH, gameState.computerY, PADDLE_WIDTH, PADDLE_HEIGHT)
-
-            // Bola
-            context.fillRect(gameState.ballX, gameState.ballY, BALL_SIZE, BALL_SIZE)
-
-            // Linha central
-            context.setLineDash([5, 15])
-            context.beginPath()
-            context.moveTo(GAME_WIDTH / 2, 0)
-            context.lineTo(GAME_WIDTH / 2, GAME_HEIGHT)
-            context.strokeStyle = "#fff"
-            context.stroke()
-
-            // Placar
-            context.font = "32px Arial"
-            context.fillText(gameState.playerScore.toString(), GAME_WIDTH / 4, 50)
-            context.fillText(gameState.computerScore.toString(), 3 * GAME_WIDTH / 4, 50)
-
+            forceUpdate({})
+            render()
         }, 1000 / 60)
 
-        return () => clearInterval(gameLoop)
-    }, [gameState])
+        render()
+
+        return () => {
+            clearInterval(gameLoop)
+            window.removeEventListener("resize", resizeCanvas)
+        }
+    }, [])
 
     const restartGame = () => {
         const resetState = resetBall()
-        setGameState({
+        gameStateRef.current = {
             playerY: GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2,
             computerY: GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2,
             ballX: resetState.ballX,
@@ -197,27 +214,30 @@ export function GameBoard() {
             playerScore: 0,
             computerScore: 0,
             isGameOver: false
-        })
+        }
+        forceUpdate({})
     }
 
     return (
         <div className="flex flex-col items-center gap-6">
             <div className="flex justify-between w-full max-w-[600px] px-4">
-                <p className="text-lg">Você: {gameState.playerScore}</p>
-                <p className="text-lg">Computador: {gameState.computerScore}</p>
+                <p className="text-lg">Você: {gameStateRef.current.playerScore}</p>
+                <p className="text-lg">Computador: {gameStateRef.current.computerScore}</p>
             </div>
 
-            <canvas
-                ref={canvasRef}
-                width={GAME_WIDTH}
-                height={GAME_HEIGHT}
-                className="border border-border rounded-lg"
-            />
+            <div ref={containerRef} className="w-full max-w-[600px] px-4">
+                <canvas
+                    ref={canvasRef}
+                    width={GAME_WIDTH}
+                    height={GAME_HEIGHT}
+                    className="border border-border rounded-lg"
+                />
+            </div>
 
-            {gameState.isGameOver && (
+            {gameStateRef.current.isGameOver && (
                 <div className="text-center">
                     <p className="text-xl font-bold mb-4">
-                        Fim de jogo! Sua pontuação: {gameState.playerScore}
+                        Fim de jogo! Sua pontuação: {gameStateRef.current.playerScore}
                     </p>
                     <Button onClick={restartGame}>Jogar Novamente</Button>
                 </div>
