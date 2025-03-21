@@ -13,6 +13,8 @@ interface Alien {
     y: number
     alive: boolean
     direction: "right" | "left"
+    width: number
+    height: number
 }
 
 interface Projectile {
@@ -28,6 +30,8 @@ interface GameState {
     gameOver: boolean
     gameStarted: boolean
     aliensDirection: "right" | "left"
+    level: number
+    alienSpeed: number
 }
 
 const CANVAS_WIDTH = 800
@@ -48,7 +52,9 @@ export function GameBoard() {
         score: 0,
         gameOver: false,
         gameStarted: false,
-        aliensDirection: "right"
+        aliensDirection: "right",
+        level: 1,
+        alienSpeed: 2
     })
 
     const initGame = useCallback(() => {
@@ -60,7 +66,9 @@ export function GameBoard() {
                     x: col * (ALIEN_SIZE + 20) + 100,
                     y: row * (ALIEN_SIZE + 20) + 50,
                     alive: true,
-                    direction: "right"
+                    direction: "right",
+                    width: 40,
+                    height: 40
                 })
             }
         }
@@ -172,6 +180,11 @@ export function GameBoard() {
         ctx.font = "20px Arial"
         ctx.fillText(`Pontuação: ${gameState.score}`, 10, 30)
 
+        // Adicionar informações do nível
+        ctx.fillStyle = 'white'
+        ctx.font = '20px Arial'
+        ctx.fillText(`Nível: ${gameState.level}`, 10, 60)
+
         if (gameState.gameOver) {
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
@@ -184,82 +197,130 @@ export function GameBoard() {
         }
     }, [gameState, drawShip, drawAlien, drawProjectile])
 
-    useEffect(() => {
-        if (!gameState.gameStarted || gameState.gameOver) return
+    const initializeAliens = useCallback((level: number) => {
+        const rows = Math.min(3 + Math.floor(level / 2), 6)
+        const cols = Math.min(6 + Math.floor(level / 2), 10)
+        const aliens: Alien[] = []
+        const spacing = 60
+        const startX = (CANVAS_WIDTH - (cols * spacing)) / 2
+        const startY = 50
 
-        const gameLoop = setInterval(() => {
-            setGameState(prev => {
-                // Mover projéteis
-                const updatedProjectiles = prev.projectiles
-                    .map(p => ({ ...p, y: p.y - PROJECTILE_SPEED }))
-                    .filter(p => p.y > 0)
-
-                // Verificar se os aliens devem mudar de direção
-                let shouldChangeDirection = false
-                let newDirection = prev.aliensDirection
-
-                prev.aliens.forEach(alien => {
-                    if (alien.alive) {
-                        if (
-                            (alien.x >= CANVAS_WIDTH - ALIEN_SIZE && prev.aliensDirection === "right") ||
-                            (alien.x <= 0 && prev.aliensDirection === "left")
-                        ) {
-                            shouldChangeDirection = true
-                            newDirection = prev.aliensDirection === "right" ? "left" : "right"
-                        }
-                    }
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                aliens.push({
+                    x: startX + col * spacing,
+                    y: startY + row * spacing,
+                    width: 40,
+                    height: 40,
+                    alive: true,
+                    direction: "right"
                 })
+            }
+        }
+        return aliens
+    }, [])
 
-                // Mover aliens
-                const updatedAliens = prev.aliens.map(alien => {
-                    if (!alien.alive) return alien
+    const checkLevelComplete = useCallback(() => {
+        if (gameState.aliens.every(alien => !alien.alive)) {
+            const newLevel = gameState.level + 1
+            const newAlienSpeed = Math.min(gameState.alienSpeed + 0.5, 8)
 
-                    let newX = alien.x
-                    if (shouldChangeDirection) {
-                        newX = alien.x
+            setGameState(prev => ({
+                ...prev,
+                level: newLevel,
+                alienSpeed: newAlienSpeed,
+                aliens: initializeAliens(newLevel),
+                gameStarted: true,
+                gameOver: false,
+            }))
+        }
+    }, [gameState.aliens, gameState.level, gameState.alienSpeed, initializeAliens])
+
+    const checkCollisions = useCallback(() => {
+        const updatedAliens = [...gameState.aliens];
+        const updatedProjectiles = gameState.projectiles.filter(projectile => {
+            let hitAlien = false;
+
+            updatedAliens.forEach(alien => {
+                if (alien.alive &&
+                    projectile.x > alien.x &&
+                    projectile.x < alien.x + alien.width &&
+                    projectile.y > alien.y &&
+                    projectile.y < alien.y + alien.height) {
+                    alien.alive = false;
+                    hitAlien = true;
+                }
+            });
+
+            return !hitAlien && projectile.y > 0;
+        });
+
+        // Verificar game over
+        const gameOver = updatedAliens.some(alien =>
+            alien.alive && alien.y + alien.height >= gameState.ship.y);
+
+        setGameState(prev => ({
+            ...prev,
+            aliens: updatedAliens,
+            projectiles: updatedProjectiles,
+            score: updatedAliens.filter(a => !a.alive).length * 100,
+            gameOver
+        }));
+    }, [gameState.aliens, gameState.projectiles, gameState.ship.y]);
+
+    useEffect(() => {
+        if (!canvasRef.current) return;
+
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const gameLoop = () => {
+            if (!gameState.gameOver && gameState.gameStarted) {
+                // Atualizar posição dos aliens
+                const updatedAliens = gameState.aliens.map(alien => {
+                    if (!alien.alive) return alien;
+
+                    let newX = alien.x;
+                    const newDirection: "right" | "left" = alien.direction === "right" ? "right" : "left";
+
+                    if (newDirection === "right") {
+                        newX += gameState.alienSpeed;
                     } else {
-                        newX = prev.aliensDirection === "right"
-                            ? alien.x + ALIEN_SPEED
-                            : alien.x - ALIEN_SPEED
+                        newX -= gameState.alienSpeed;
+                    }
+
+                    // Verificar colisão com as bordas
+                    if (newX <= 0 || newX >= CANVAS_WIDTH - alien.width) {
+                        return {
+                            ...alien,
+                            y: alien.y + 30,
+                            direction: newDirection === "right" ? "left" : "right"
+                        };
                     }
 
                     return {
                         ...alien,
                         x: newX,
-                        y: shouldChangeDirection ? alien.y + ALIEN_SIZE : alien.y
-                    }
-                })
+                        direction: newDirection
+                    };
+                });
+
+                setGameState(prev => ({
+                    ...prev,
+                    aliens: updatedAliens
+                }));
 
                 // Verificar colisões
-                updatedProjectiles.forEach(projectile => {
-                    updatedAliens.forEach(alien => {
-                        if (alien.alive &&
-                            projectile.x > alien.x &&
-                            projectile.x < alien.x + ALIEN_SIZE &&
-                            projectile.y > alien.y &&
-                            projectile.y < alien.y + ALIEN_SIZE) {
-                            alien.alive = false
-                        }
-                    })
-                })
+                checkCollisions();
+                // Verificar se o nível foi completado
+                checkLevelComplete();
+            }
+        };
 
-                // Verificar game over
-                const gameOver = updatedAliens.some(alien =>
-                    alien.alive && alien.y + ALIEN_SIZE >= prev.ship.y)
-
-                return {
-                    ...prev,
-                    projectiles: updatedProjectiles,
-                    aliens: updatedAliens,
-                    aliensDirection: shouldChangeDirection ? newDirection : prev.aliensDirection,
-                    score: updatedAliens.filter(a => !a.alive).length * 100,
-                    gameOver
-                }
-            })
-        }, 1000 / 60)
-
-        return () => clearInterval(gameLoop)
-    }, [gameState.gameStarted, gameState.gameOver])
+        const gameInterval = setInterval(gameLoop, 1000 / 60);
+        return () => clearInterval(gameInterval);
+    }, [gameState, checkCollisions, checkLevelComplete]);
 
     // Loop de renderização usando requestAnimationFrame
     useEffect(() => {
@@ -297,6 +358,14 @@ export function GameBoard() {
         window.addEventListener("keydown", handleKeyPress)
         return () => window.removeEventListener("keydown", handleKeyPress)
     }, [gameState.gameStarted, gameState.gameOver, moveShip, shoot])
+
+    useEffect(() => {
+        // Inicializar aliens com o nível atual quando o jogo começa
+        setGameState(prev => ({
+            ...prev,
+            aliens: initializeAliens(prev.level),
+        }))
+    }, [initializeAliens])
 
     return (
         <div className="flex flex-col items-center gap-4">
