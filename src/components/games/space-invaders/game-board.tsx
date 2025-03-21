@@ -277,6 +277,14 @@ export function GameBoard() {
 
         const gameLoop = () => {
             if (!gameState.gameOver && gameState.gameStarted) {
+                // Atualizar posição dos projéteis
+                const updatedProjectiles = gameState.projectiles
+                    .map(projectile => ({
+                        ...projectile,
+                        y: projectile.y - PROJECTILE_SPEED
+                    }))
+                    .filter(projectile => projectile.y > 0);
+
                 // Atualizar posição dos aliens
                 const updatedAliens = gameState.aliens.map(alien => {
                     if (!alien.alive) return alien;
@@ -308,7 +316,8 @@ export function GameBoard() {
 
                 setGameState(prev => ({
                     ...prev,
-                    aliens: updatedAliens
+                    projectiles: updatedProjectiles,
+                    aliens: updatedAliens as Alien[]
                 }));
 
                 // Verificar colisões
