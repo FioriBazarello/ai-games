@@ -22,6 +22,13 @@ const games = [
     description: "O famoso jogo da cobrinha em uma versão moderna",
     image: "/games/snake.png",
     route: "/games/snake"
+  },
+  {
+    id: 4,
+    title: "Pong",
+    description: "O clássico jogo de tênis de mesa contra o computador",
+    image: "/games/pong.png",
+    route: "/games/pong"
   }
 ]
 
