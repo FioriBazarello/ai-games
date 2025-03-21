@@ -9,6 +9,11 @@ Este documento serve como guia completo para o desenvolvimento do projeto AI Gam
 2. @Tecnologias Utilizadas
 3. @Padrões de Código
 4. @Criando Novos Jogos
+   - Estrutura de Arquivos
+   - Adicionando à Página Principal
+   - Página do Jogo
+   - Componente do Jogo
+   - Atualizando a Documentação
 5. @Boas Práticas
 6. @Deploy e Publicação
 7. @Controle de Versão
@@ -22,6 +27,8 @@ ai-games/
 │   │   ├── games/             # Páginas dos jogos
 │   │   │   ├── memory/        # Jogo da Memória
 │   │   │   ├── pong/          # Pong
+│   │   │   ├── snake/         # Snake Game
+│   │   │   ├── tetris/        # Tetris
 │   │   │   └── tic-tac-toe/   # Jogo da Velha
 │   │   ├── layout.tsx         # Layout principal
 │   │   └── page.tsx           # Página inicial
@@ -183,6 +190,26 @@ export function GameBoard() {
         </div>
     )
 }
+```
+
+### 5. Atualizando a Documentação
+
+Após criar um novo jogo, é **OBRIGATÓRIO** atualizar a documentação:
+
+1. **No README.md**:
+   - Adicione o jogo na seção "🎲 Jogos Disponíveis"
+   - Inclua uma breve descrição do jogo
+   - Mantenha o padrão de formatação dos jogos existentes
+
+2. **No GUIA_DESENVOLVIMENTO.md**:
+   - Atualize a estrutura de diretórios na seção "📁 Estrutura do Projeto"
+   - Adicione o novo jogo na lista de diretórios em `src/app/games/`
+   - Mantenha a ordem alfabética dos jogos
+
+Exemplo de atualização no README.md:
+```markdown
+### Nome do Novo Jogo
+Breve descrição do jogo, destacando suas principais características e modo de jogo.
 ```
 
 ## ✨ Boas Práticas

@@ -27,6 +27,9 @@ Teste sua memória encontrando os pares de cartas. Tente completar com o menor n
 ### Snake Game
 O famoso jogo da cobrinha em uma versão moderna. Controles WASD e suporte para dispositivos móveis.
 
+### Tetris
+O clássico jogo de blocos russo em uma versão moderna. Organize as peças para completar linhas e marque pontos!
+
 ## 🚀 Tecnologias
 
 - [Next.js 15](https://nextjs.org/) - Framework React
