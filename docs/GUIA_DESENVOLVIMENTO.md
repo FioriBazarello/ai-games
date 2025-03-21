@@ -11,6 +11,7 @@ Este documento serve como guia completo para o desenvolvimento do projeto AI Gam
 4. @Criando Novos Jogos
 5. @Boas Práticas
 6. @Deploy e Publicação
+7. @Controle de Versão
 
 ## 📁 Estrutura do Projeto
 
@@ -251,3 +252,47 @@ npm run build
 
 1. Faça o upload do projeto para o serviço de hospedagem
 2. Configure o serviço para servir os arquivos estáticos
+
+## 🔄 Controle de Versão
+
+### Branches e Features
+
+1. **Criação de Branches**:
+   - Antes de iniciar o desenvolvimento de um novo jogo, SEMPRE crie uma nova branch
+   - Use o padrão: `feature/add-nome-do-jogo`
+   - Exemplo: `feature/add-tetris-game`
+
+2. **Workflow de Desenvolvimento**:
+   ```bash
+   # Criar e mudar para nova branch
+   git checkout -b feature/add-nome-do-jogo
+
+   # Subir branch para o repositório remoto
+   git push -u origin feature/add-nome-do-jogo
+   ```
+
+### Commits e Push
+
+1. **Regras de Commit**:
+   - NUNCA faça commits sem a solicitação e permissão expressa do desenvolvedor
+   - Use mensagens claras e em português
+   - Siga o padrão de commits convencionais:
+     - `feat: adiciona novo jogo X`
+     - `fix: corrige bug no jogo Y`
+     - `docs: atualiza documentação`
+     - `style: ajusta estilo do componente`
+
+2. **Push Automático**:
+   - Após cada commit autorizado, SEMPRE faça push para a branch remota
+   - Exemplo:
+     ```bash
+     git add .
+     git commit -m "feat: adiciona jogo do tetris"
+     git push
+     ```
+
+3. **Boas Práticas**:
+   - Mantenha commits pequenos e focados
+   - Faça push frequentemente para evitar conflitos
+   - Não acumule muitas alterações sem commit
+   - Sempre verifique em qual branch está antes de começar a trabalhar
