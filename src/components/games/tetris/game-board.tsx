@@ -152,7 +152,7 @@ export function GameBoard() {
             // Verificar linhas completas
             let linesCleared = 0
             for (let y = GRID_HEIGHT - 1; y >= 0; y--) {
-                if (newGrid[y].every(cell => cell !== null)) {
+                if (newGrid[y].every((cell: TetrisBlock) => cell !== null)) {
                     newGrid.splice(y, 1)
                     newGrid.unshift(Array(GRID_WIDTH).fill(null))
                     linesCleared++
