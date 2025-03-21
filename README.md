@@ -94,4 +94,4 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ---
 
-Feito com ❤️ por [Fiori](https://github.com/Fiori)
+Feito com ❤️ por [Fiori Bazarello](https://github.com/FioriBazarello)
