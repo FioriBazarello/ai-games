@@ -30,6 +30,9 @@ O famoso jogo da cobrinha em uma versão moderna. Controles WASD e suporte para 
 ### Tetris
 O clássico jogo de blocos russo em uma versão moderna. Organize as peças para completar linhas e marque pontos!
 
+### Space Invaders
+O clássico jogo de arcade onde você defende a Terra dos alienígenas invasores. Use as setas para mover e a barra de espaço para atirar!
+
 ## 🚀 Tecnologias
 
 - [Next.js 15](https://nextjs.org/) - Framework React
