@@ -21,6 +21,17 @@ interface GameState {
     isPaused: boolean
 }
 
+// Cores das peças
+const BLOCK_COLORS: Record<TetrisBlockType, string> = {
+    I: 'bg-cyan-500',
+    O: 'bg-yellow-500',
+    T: 'bg-purple-500',
+    S: 'bg-green-500',
+    Z: 'bg-red-500',
+    J: 'bg-blue-500',
+    L: 'bg-orange-500'
+}
+
 // Peças do Tetris
 const TETRIS_PIECES: Record<TetrisBlockType, TetrisBlock[][]> = {
     I: [
@@ -62,7 +73,7 @@ const TETRIS_PIECES: Record<TetrisBlockType, TetrisBlock[][]> = {
 
 const GRID_WIDTH = 10
 const GRID_HEIGHT = 20
-const INITIAL_SPEED = 1000
+const INITIAL_SPEED = 800 // Velocidade um pouco mais lenta para melhor jogabilidade
 
 export function GameBoard() {
     const [gameState, setGameState] = useState<GameState>({
@@ -78,7 +89,7 @@ export function GameBoard() {
         const pieces = Object.keys(TETRIS_PIECES) as TetrisBlockType[]
         const randomPiece = pieces[Math.floor(Math.random() * pieces.length)]
         return {
-            shape: [...TETRIS_PIECES[randomPiece]],
+            shape: JSON.parse(JSON.stringify(TETRIS_PIECES[randomPiece])), // Deep clone para evitar referências
             x: Math.floor(GRID_WIDTH / 2) - Math.floor(TETRIS_PIECES[randomPiece][0].length / 2),
             y: 0
         }
@@ -88,7 +99,7 @@ export function GameBoard() {
     const checkCollision = useCallback((piece: TetrisPiece, grid: TetrisGrid): boolean => {
         for (let y = 0; y < piece.shape.length; y++) {
             for (let x = 0; x < piece.shape[y].length; x++) {
-                if (piece.shape[y][x]) {
+                if (piece.shape[y][x] !== null) {
                     const newX = piece.x + x
                     const newY = piece.y + y
 
@@ -118,9 +129,10 @@ export function GameBoard() {
                 ...prev,
                 currentPiece: newPiece
             }))
+            return true
         } else if (dy > 0) {
             // Colisão ao mover para baixo - fixar peça
-            const newGrid = [...gameState.grid]
+            const newGrid = JSON.parse(JSON.stringify(gameState.grid)) // Deep clone
             const piece = gameState.currentPiece
 
             // Adicionar peça ao grid
@@ -130,7 +142,7 @@ export function GameBoard() {
                         const newY = piece.y + y
                         if (newY < 0) {
                             setGameState(prev => ({ ...prev, gameOver: true }))
-                            return
+                            return false
                         }
                         newGrid[newY][piece.x + x] = piece.shape[y][x]
                     }
@@ -156,6 +168,7 @@ export function GameBoard() {
                 score: prev.score + (linesCleared * 100)
             }))
         }
+        return false
     }, [gameState, checkCollision, createNewPiece])
 
     // Rotacionar peça
@@ -172,11 +185,29 @@ export function GameBoard() {
             shape: newShape
         }
 
-        if (!checkCollision(newPiece, gameState.grid)) {
-            setGameState(prev => ({
-                ...prev,
-                currentPiece: newPiece
-            }))
+        // Tentar rotação com ajustes de posição se necessário
+        const tryRotation = (offsetX: number) => {
+            const adjustedPiece = {
+                ...newPiece,
+                x: newPiece.x + offsetX
+            }
+            if (!checkCollision(adjustedPiece, gameState.grid)) {
+                setGameState(prev => ({
+                    ...prev,
+                    currentPiece: adjustedPiece
+                }))
+                return true
+            }
+            return false
+        }
+
+        // Tentar rotação normal, depois com ajustes
+        if (!tryRotation(0)) {
+            if (!tryRotation(-1)) {
+                if (!tryRotation(1)) {
+                    tryRotation(2)
+                }
+            }
         }
     }, [gameState, checkCollision])
 
@@ -185,7 +216,9 @@ export function GameBoard() {
         const handleKeyPress = (e: KeyboardEvent) => {
             if (gameState.gameOver) return
 
-            switch (e.key) {
+            e.preventDefault() // Prevenir scroll da página
+
+            switch (e.code) {
                 case 'ArrowLeft':
                     movePiece(-1, 0)
                     break
@@ -198,18 +231,20 @@ export function GameBoard() {
                 case 'ArrowUp':
                     rotatePiece()
                     break
-                case ' ':
+                case 'Space':
                     // Queda instantânea
                     if (gameState.currentPiece) {
+                        let distance = 0
                         while (!checkCollision({
                             ...gameState.currentPiece,
-                            y: gameState.currentPiece.y + 1
+                            y: gameState.currentPiece.y + distance + 1
                         }, gameState.grid)) {
-                            movePiece(0, 1)
+                            distance++
                         }
+                        movePiece(0, distance)
                     }
                     break
-                case 'p':
+                case 'KeyP':
                     setGameState(prev => ({ ...prev, isPaused: !prev.isPaused }))
                     break
             }
@@ -239,14 +274,14 @@ export function GameBoard() {
 
     // Renderizar grid
     const renderGrid = () => {
-        const displayGrid = [...gameState.grid]
+        const displayGrid = JSON.parse(JSON.stringify(gameState.grid)) as TetrisGrid
 
         // Adicionar peça atual ao grid de exibição
         if (gameState.currentPiece) {
             const { shape, x, y } = gameState.currentPiece
             shape.forEach((row, dy) => {
                 row.forEach((cell, dx) => {
-                    if (cell && y + dy >= 0) {
+                    if (cell !== null && y + dy >= 0) {
                         if (y + dy < GRID_HEIGHT && x + dx >= 0 && x + dx < GRID_WIDTH) {
                             displayGrid[y + dy][x + dx] = cell
                         }
@@ -257,10 +292,11 @@ export function GameBoard() {
 
         return (
             <div className="grid grid-cols-10 gap-px bg-gray-700 p-2 rounded-lg">
-                {displayGrid.flat().map((cell, i) => (
+                {displayGrid.flat().map((cell: TetrisBlock, i: number) => (
                     <div
                         key={i}
-                        className={`w-6 h-6 rounded-sm ${cell ? 'bg-blue-500' : 'bg-gray-900'}`}
+                        className={`w-6 h-6 rounded-sm ${cell ? BLOCK_COLORS[cell as TetrisBlockType] : 'bg-gray-900'
+                            } transition-colors duration-100`}
                     />
                 ))}
             </div>
@@ -296,6 +332,12 @@ export function GameBoard() {
                     </Button>
                 )}
             </div>
+
+            {gameState.isPaused && (
+                <div className="text-lg font-bold text-yellow-500">
+                    Jogo Pausado
+                </div>
+            )}
         </div>
     )
 } 
