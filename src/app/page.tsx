@@ -29,6 +29,13 @@ const games = [
     description: "O clássico jogo de tênis de mesa contra o computador",
     image: "/games/pong.png",
     route: "/games/pong"
+  },
+  {
+    id: 5,
+    title: "Tetris",
+    description: "Clássico jogo de blocos onde você deve encaixar as peças para completar linhas",
+    image: "/games/tetris.png",
+    route: "/games/tetris"
   }
 ]
 
