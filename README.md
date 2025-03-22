@@ -5,6 +5,7 @@ Uma coleção de jogos clássicos recriados com uma interface moderna usando Nex
 
 ![Versão](https://img.shields.io/badge/versão-0.1.0-blue.svg)
 ![Licença](https://img.shields.io/badge/licença-MIT-green.svg)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/6e7ca1de-6b77-42c0-846e-8bd111be771d/deploy-status)](https://app.netlify.com/sites/aigamestest/deploys)
 
 ## 🎯 Sobre o Projeto
 
