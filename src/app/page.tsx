@@ -36,6 +36,13 @@ const games = [
     description: "Clássico jogo de blocos onde você deve encaixar as peças para completar linhas",
     image: "/games/tetris.png",
     route: "/games/tetris"
+  },
+  {
+    id: 6,
+    title: "Space Invaders",
+    description: "Defenda a Terra dos alienígenas invasores neste clássico arcade",
+    image: "/games/space-invaders.png",
+    route: "/games/space-invaders"
   }
 ]
 

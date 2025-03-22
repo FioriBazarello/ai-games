@@ -28,6 +28,7 @@ ai-games/
 │   │   │   ├── memory/        # Jogo da Memória
 │   │   │   ├── pong/          # Pong
 │   │   │   ├── snake/         # Snake Game
+│   │   │   ├── space-invaders/ # Space Invaders
 │   │   │   ├── tetris/        # Tetris
 │   │   │   └── tic-tac-toe/   # Jogo da Velha
 │   │   ├── layout.tsx         # Layout principal

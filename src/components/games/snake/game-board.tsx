@@ -103,40 +103,29 @@ export function GameBoard() {
         setSnake(newSnake)
     }, [direction, snake, food, isGameOver, isPlaying, score, highScore, generateFood])
 
-    useEffect(() => {
-        const handleKeyPress = (event: KeyboardEvent) => {
-            if (!isPlaying) return
+    const handleKeyPress = useCallback((event: KeyboardEvent) => {
+        if (isGameOver) return;
 
-            const keyDirections: { [key: string]: Direction } = {
-                w: "UP",
-                W: "UP",
-                s: "DOWN",
-                S: "DOWN",
-                a: "LEFT",
-                A: "LEFT",
-                d: "RIGHT",
-                D: "RIGHT",
-            }
-
-            const newDirection = keyDirections[event.key]
-            if (!newDirection) return
-
-            // Previne movimento na direção oposta
-            const opposites = {
-                UP: "DOWN",
-                DOWN: "UP",
-                LEFT: "RIGHT",
-                RIGHT: "LEFT",
-            }
-
-            if (opposites[newDirection] !== direction) {
-                setDirection(newDirection)
-            }
+        switch (event.key) {
+            case "ArrowUp":
+                if (direction !== "DOWN") setDirection("UP");
+                break;
+            case "ArrowDown":
+                if (direction !== "UP") setDirection("DOWN");
+                break;
+            case "ArrowLeft":
+                if (direction !== "RIGHT") setDirection("LEFT");
+                break;
+            case "ArrowRight":
+                if (direction !== "LEFT") setDirection("RIGHT");
+                break;
         }
+    }, [direction, isGameOver, checkCollision])
 
+    useEffect(() => {
         window.addEventListener("keydown", handleKeyPress)
         return () => window.removeEventListener("keydown", handleKeyPress)
-    }, [direction, isPlaying])
+    }, [handleKeyPress])
 
     useEffect(() => {
         const gameLoop = setInterval(moveSnake, GAME_SPEED)
