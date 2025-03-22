@@ -25,11 +25,10 @@ export default function SpaceInvadersPage() {
                     <CardTitle>Como Jogar</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <p>1. Use as setas ⬅️ e ➡️ do teclado ou os botões na tela para mover sua nave</p>
-                    <p>2. Pressione a barra de espaço ou o botão "Atirar" para disparar contra os alienígenas</p>
-                    <p>3. Destrua todos os alienígenas antes que eles cheguem até sua nave</p>
-                    <p>4. Cada alienígena destruído vale 100 pontos</p>
-                    <p>5. O jogo termina se algum alienígena atingir sua nave</p>
+                    <p>1. Use as setas do teclado ou os botões para mover a nave</p>
+                    <p>2. Pressione a barra de espaço ou o botão &quot;Atirar&quot; para disparar</p>
+                    <p>3. Destrua todos os aliens para avançar ao próximo nível</p>
+                    <p>4. Não deixe os aliens chegarem até sua nave!</p>
                 </CardContent>
             </Card>
         </div>

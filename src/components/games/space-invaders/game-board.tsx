@@ -36,12 +36,11 @@ interface GameState {
 
 const CANVAS_WIDTH = 800
 const CANVAS_HEIGHT = 600
-const SHIP_SIZE = 40
+const SHIP_SIZE = 30
 const ALIEN_SIZE = 30
 const PROJECTILE_SIZE = 5
-const SHIP_SPEED = 15
-const ALIEN_SPEED = 2
-const PROJECTILE_SPEED = 8
+const SHIP_SPEED = 5
+const PROJECTILE_SPEED = 7
 
 export function GameBoard() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -219,54 +218,6 @@ export function GameBoard() {
         }
         return aliens
     }, [])
-
-    const checkLevelComplete = useCallback(() => {
-        if (gameState.aliens.every(alien => !alien.alive)) {
-            const newLevel = gameState.level + 1
-            const newAlienSpeed = Math.min(gameState.alienSpeed + 0.5, 8)
-
-            setGameState(prev => ({
-                ...prev,
-                level: newLevel,
-                alienSpeed: newAlienSpeed,
-                aliens: initializeAliens(newLevel),
-                gameStarted: true,
-                gameOver: false,
-            }))
-        }
-    }, [gameState.aliens, gameState.level, gameState.alienSpeed, initializeAliens])
-
-    const checkCollisions = useCallback(() => {
-        const updatedAliens = [...gameState.aliens];
-        const updatedProjectiles = gameState.projectiles.filter(projectile => {
-            let hitAlien = false;
-
-            updatedAliens.forEach(alien => {
-                if (alien.alive &&
-                    projectile.x > alien.x &&
-                    projectile.x < alien.x + alien.width &&
-                    projectile.y > alien.y &&
-                    projectile.y < alien.y + alien.height) {
-                    alien.alive = false;
-                    hitAlien = true;
-                }
-            });
-
-            return !hitAlien && projectile.y > 0;
-        });
-
-        // Verificar game over
-        const gameOver = updatedAliens.some(alien =>
-            alien.alive && alien.y + alien.height >= gameState.ship.y);
-
-        setGameState(prev => ({
-            ...prev,
-            aliens: updatedAliens,
-            projectiles: updatedProjectiles,
-            score: updatedAliens.filter(a => !a.alive).length * 100,
-            gameOver
-        }));
-    }, [gameState.aliens, gameState.projectiles, gameState.ship.y]);
 
     useEffect(() => {
         if (!canvasRef.current || !gameState.gameStarted || gameState.gameOver) return;
